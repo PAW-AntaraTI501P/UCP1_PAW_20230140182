@@ -15,5 +15,6 @@
 ---
 ## Tampilan Database (perpustakaan_paw)
 ![Tampilan Database](./screenshot/db.png)
-![Tampilan Tabel Database](../screenshot/tabeldb.png)
+![Tampilan Tabel Database](./screenshot/tabeldb.png)
+
 
