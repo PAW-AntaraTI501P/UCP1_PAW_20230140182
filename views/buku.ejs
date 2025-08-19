@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daftar Buku</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1 class="text-center">Daftar Buku Perpustakaan</h1>
+
+      <form id="addBukuForm" class="my-4">
+        <div class="form-row">
+          <div class="col">
+            <input type="text" id="newJudul" class="form-control" placeholder="Judul" required />
+          </div>
+          <div class="col">
+            <input type="text" id="newPenulis" class="form-control" placeholder="Penulis" required />
+          </div>
+          <div class="col">
+            <input type="text" id="newPenerbit" class="form-control" placeholder="Penerbit" />
+          </div>
+          <div class="col">
+            <input type="number" id="newTahunTerbit" class="form-control" placeholder="Tahun Terbit" />
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Tambah Buku</button>
+          </div>
+        </div>
+      </form>
+
+      <table class="table table-bordered">
+        <thead class="thead-dark">
+          <tr>
+            <th>Judul</th>
+            <th>Penulis</th>
+            <th>Penerbit</th>
+            <th>Tahun Terbit</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="bukuList">
+          <% buku.forEach(item => { %>
+          <tr data-id="<%= item.id %>">
+            <td class="judul"><%= item.judul %></td>
+            <td class="penulis"><%= item.penulis %></td>
+            <td class="penerbit"><%= item.penerbit %></td>
+            <td class="tahun_terbit"><%= item.tahun_terbit %></td>
+            <td>
+              <button class="btn btn-sm btn-success mr-2 editBtn" data-id="<%= item.id %>">
+                Edit
+              </button>
+              <button class="btn btn-sm btn-danger deleteBtn" data-id="<%= item.id %>">
+                Delete
+              </button>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+
+      <div id="editModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Edit Buku</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form id="editBukuForm">
+                <div class="form-group">
+                  <label for="editJudul">Judul</label>
+                  <input type="text" id="editJudul" class="form-control" required />
+                </div>
+                <div class="form-group">
+                  <label for="editPenulis">Penulis</label>
+                  <input type="text" id="editPenulis" class="form-control" required/>
+                </div>
+                <div class="form-group">
+                  <label for="editPenerbit">Penerbit</label>
+                  <input type="text" id="editPenerbit" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label for="editTahunTerbit">Tahun Terbit</label>
+                  <input type="number" id="editTahunTerbit" class="form-control" />
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">
+                  Simpan Perubahan
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        let editId;
+
+        // Menambah buku baru
+        $("#addBukuForm").on("submit", function (e) {
+          e.preventDefault();
+          const newBuku = {
+            judul: $("#newJudul").val().trim(),
+            penulis: $("#newPenulis").val().trim(),
+            penerbit: $("#newPenerbit").val().trim(),
+            tahun_terbit: $("#newTahunTerbit").val(),
+          };
+
+          if (newBuku.judul && newBuku.penulis) {
+            $.ajax({
+              url: "/buku", // URL endpoint API
+              type: "POST",
+              contentType: "application/json",
+              data: JSON.stringify(newBuku),
+              success: function () {
+                location.reload();
+              },
+              error: function (err) {
+                console.error("Error menambah buku:", err.responseText);
+              },
+            });
+          }
+        });
+
+        // Menghapus buku
+        $(".deleteBtn").on("click", function () {
+          const id = $(this).data("id");
+          $.ajax({
+            url: "/buku/" + id, // URL endpoint API
+            type: "DELETE",
+            success: function () {
+              location.reload();
+            },
+          });
+        });
+
+        // Menampilkan modal edit
+        $(".editBtn").on("click", function () {
+          editId = $(this).data("id");
+          const row = $(this).closest("tr");
+          
+          // Mengambil data dari sel tabel
+          const judul = row.find(".judul").text();
+          const penulis = row.find(".penulis").text();
+          const penerbit = row.find(".penerbit").text();
+          const tahun_terbit = row.find(".tahun_terbit").text();
+
+          // Mengisi form di modal
+          $("#editJudul").val(judul);
+          $("#editPenulis").val(penulis);
+          $("#editPenerbit").val(penerbit);
+          $("#editTahunTerbit").val(tahun_terbit);
+          
+          $("#editModal").modal("show");
+        });
+
+        // Memperbarui buku
+        $("#editBukuForm").on("submit", function (e) {
+          e.preventDefault();
+          const updatedBuku = {
+            judul: $("#editJudul").val().trim(),
+            penulis: $("#editPenulis").val().trim(),
+            penerbit: $("#editPenerbit").val().trim(),
+            tahun_terbit: $("#editTahunTerbit").val(),
+          };
+
+          if (updatedBuku.judul && updatedBuku.penulis) {
+            $.ajax({
+              url: "/buku/" + editId, // URL endpoint API
+              type: "PUT",
+              data: JSON.stringify(updatedBuku),
+              contentType: "application/json",
+              success: function () {
+                location.reload();
+              },
+            });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
